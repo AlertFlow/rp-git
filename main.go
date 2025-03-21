@@ -3,13 +3,15 @@ package main
 import (
 	"errors"
 	"net/rpc"
+	"os"
 	"time"
 
-	"github.com/AlertFlow/runner/pkg/executions"
-	"github.com/AlertFlow/runner/pkg/plugins"
+	"github.com/v1Flows/runner/pkg/executions"
+	"github.com/v1Flows/runner/pkg/plugins"
+	"github.com/v1Flows/shared-library/pkg/models"
 
-	"github.com/v1Flows/alertFlow/services/backend/pkg/models"
-
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/hashicorp/go-plugin"
 )
 
@@ -17,28 +19,94 @@ import (
 type Plugin struct{}
 
 func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Response, error) {
-	param1 := ""
+	url := ""
+	directory := ""
+	username := ""
+	password := ""
+	token := ""
 
 	// access action params
 	for _, param := range request.Step.Action.Params {
-		if param.Key == "Param1" {
-			param1 = param.Value
+		if param.Key == "url" {
+			url = param.Value
+		}
+		if param.Key == "directory" {
+			directory = param.Value
+		}
+		if param.Key == "username" {
+			username = param.Value
+		}
+		if param.Key == "password" {
+			password = param.Value
+		}
+		if param.Key == "token" {
+			token = param.Value
 		}
 	}
 
 	// update the step with the messages
 	err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
 		ID: request.Step.ID,
-		Messages: []string{
-			"Execution ID: " + request.Execution.ID.String(),
-			"Step ID: " + request.Step.ID.String(),
-			param1,
-			"Template Action finished",
+		Messages: []models.Message{
+			{
+				Title: "Git",
+				Lines: []string{
+					"Git clone " + url + " to " + directory,
+				},
+			},
+		},
+		Status:    "running",
+		StartedAt: time.Now(),
+	}, request.Platform)
+	if err != nil {
+		return plugins.Response{
+			Success: false,
+		}, err
+	}
+
+	if token != "" {
+		_, err = git.PlainClone(directory, false, &git.CloneOptions{
+			Auth: &http.BasicAuth{
+				Username: "abc123",
+				Password: token,
+			},
+			URL:      url,
+			Progress: os.Stdout,
+		})
+		if err != nil {
+			return plugins.Response{
+				Success: false,
+			}, err
+		}
+	} else {
+		_, err = git.PlainClone(directory, false, &git.CloneOptions{
+			Auth: &http.BasicAuth{
+				Username: username,
+				Password: password,
+			},
+			URL:      url,
+			Progress: os.Stdout,
+		})
+		if err != nil {
+			return plugins.Response{
+				Success: false,
+			}, err
+		}
+	}
+
+	err = executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
+		ID: request.Step.ID,
+		Messages: []models.Message{
+			{
+				Title: "Git",
+				Lines: []string{
+					"Repository cloned successfully",
+				},
+			},
 		},
 		Status:     "success",
-		StartedAt:  time.Now(),
 		FinishedAt: time.Now(),
-	})
+	}, request.Platform)
 	if err != nil {
 		return plugins.Response{
 			Success: false,
@@ -50,35 +118,73 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 	}, nil
 }
 
-func (p *Plugin) HandlePayload(request plugins.PayloadHandlerRequest) (plugins.Response, error) {
+func (p *Plugin) EndpointRequest(request plugins.EndpointRequest) (plugins.Response, error) {
 	return plugins.Response{
 		Success: false,
 	}, errors.New("not implemented")
 }
 
-func (p *Plugin) Info() (models.Plugins, error) {
-	var plugin = models.Plugins{
-		Name:    "Template",
+func (p *Plugin) Info() (models.Plugin, error) {
+	var plugin = models.Plugin{
+		Name:    "Git",
 		Type:    "action",
-		Version: "1.1.0",
+		Version: "1.0.0",
 		Author:  "JustNZ",
-		Actions: models.Actions{
-			Name:        "Template",
-			Description: "Template description",
-			Plugin:      "template",
-			Icon:        "solar:clipboard-list-broken",
-			Category:    "Template",
+		Action: models.Action{
+			Name:        "Git",
+			Description: "Clone a repository",
+			Plugin:      "git",
+			Icon:        "hugeicons:git-merge",
+			Category:    "Utility",
 			Params: []models.Params{
 				{
-					Key:         "Param1",
+					Key:         "url",
+					Title:       "URL",
+					Type:        "text",
+					Default:     "",
+					Required:    true,
+					Description: "URL of the repository to clone",
+					Category:    "Repository",
+				},
+				{
+					Key:         "directory",
+					Title:       "Directory",
 					Type:        "text",
 					Default:     "",
 					Required:    false,
-					Description: "Param1 description",
+					Description: "Path to clone the repository to",
+					Category:    "Repository",
+				},
+				{
+					Key:         "username",
+					Title:       "Username",
+					Type:        "text",
+					Default:     "",
+					Required:    false,
+					Description: "Username for authentication",
+					Category:    "Authentication",
+				},
+				{
+					Key:         "password",
+					Title:       "Password",
+					Type:        "password",
+					Default:     "",
+					Required:    false,
+					Description: "Password for authentication",
+					Category:    "Authentication",
+				},
+				{
+					Key:         "token",
+					Title:       "Token",
+					Type:        "password",
+					Default:     "",
+					Required:    false,
+					Description: "Token for authentication. If provided, username and password will be ignored",
+					Category:    "Authentication",
 				},
 			},
 		},
-		Endpoints: models.PayloadEndpoints{},
+		Endpoint: models.Endpoint{},
 	}
 
 	return plugin, nil
@@ -95,13 +201,13 @@ func (s *PluginRPCServer) ExecuteTask(request plugins.ExecuteTaskRequest, resp *
 	return err
 }
 
-func (s *PluginRPCServer) HandlePayload(request plugins.PayloadHandlerRequest, resp *plugins.Response) error {
-	result, err := s.Impl.HandlePayload(request)
+func (s *PluginRPCServer) EndpointRequest(request plugins.EndpointRequest, resp *plugins.Response) error {
+	result, err := s.Impl.EndpointRequest(request)
 	*resp = result
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugins) error {
+func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugin) error {
 	result, err := s.Impl.Info()
 	*resp = result
 	return err
