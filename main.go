@@ -74,6 +74,25 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 			Progress: os.Stdout,
 		})
 		if err != nil {
+			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
+				ID: request.Step.ID,
+				Messages: []models.Message{
+					{
+						Title: "Git",
+						Lines: []string{
+							"Error cloning repository",
+							err.Error(),
+						},
+					},
+				},
+				Status:     "error",
+				FinishedAt: time.Now(),
+			}, request.Platform)
+			if err != nil {
+				return plugins.Response{
+					Success: false,
+				}, err
+			}
 			return plugins.Response{
 				Success: false,
 			}, err
@@ -88,6 +107,25 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 			Progress: os.Stdout,
 		})
 		if err != nil {
+			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
+				ID: request.Step.ID,
+				Messages: []models.Message{
+					{
+						Title: "Git",
+						Lines: []string{
+							"Error cloning repository",
+							err.Error(),
+						},
+					},
+				},
+				Status:     "error",
+				FinishedAt: time.Now(),
+			}, request.Platform)
+			if err != nil {
+				return plugins.Response{
+					Success: false,
+				}, err
+			}
 			return plugins.Response{
 				Success: false,
 			}, err
