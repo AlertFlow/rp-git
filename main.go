@@ -172,7 +172,7 @@ func (p *Plugin) Info(request plugins.InfoRequest) (models.Plugin, error) {
 			Name:        "Git",
 			Description: "Clone a repository",
 			Plugin:      "git",
-			Icon:        "hugeicons:git-merge",
+			Icon:        "mdi:git",
 			Category:    "Utility",
 			Params: []models.Params{
 				{
