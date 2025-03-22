@@ -20,7 +20,7 @@ type Plugin struct{}
 
 func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Response, error) {
 	url := ""
-	directory := ""
+	directory := request.Workspace
 	username := ""
 	password := ""
 	token := ""
@@ -30,7 +30,7 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		if param.Key == "url" {
 			url = param.Value
 		}
-		if param.Key == "directory" {
+		if param.Key == "directory" && param.Value != "" {
 			directory = param.Value
 		}
 		if param.Key == "username" {
@@ -190,7 +190,7 @@ func (p *Plugin) Info() (models.Plugin, error) {
 					Type:        "text",
 					Default:     "",
 					Required:    false,
-					Description: "Path to clone the repository to",
+					Description: "Path to clone the repository to. If not provided, the repository will be cloned to the runner workspace directory",
 					Category:    "Repository",
 				},
 				{
