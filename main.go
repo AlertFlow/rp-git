@@ -20,7 +20,7 @@ type Plugin struct{}
 
 func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Response, error) {
 	url := ""
-	directory := request.Workspace
+	directory := ""
 	username := ""
 	password := ""
 	token := ""
@@ -30,8 +30,8 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		if param.Key == "url" {
 			url = param.Value
 		}
-		if param.Key == "directory" && param.Value != "" {
-			directory = param.Value
+		if param.Key == "directory" {
+			directory = request.Workspace + "/" + param.Value
 		}
 		if param.Key == "username" {
 			username = param.Value
@@ -162,7 +162,7 @@ func (p *Plugin) EndpointRequest(request plugins.EndpointRequest) (plugins.Respo
 	}, errors.New("not implemented")
 }
 
-func (p *Plugin) Info() (models.Plugin, error) {
+func (p *Plugin) Info(request plugins.InfoRequest) (models.Plugin, error) {
 	var plugin = models.Plugin{
 		Name:    "Git",
 		Type:    "action",
@@ -189,8 +189,8 @@ func (p *Plugin) Info() (models.Plugin, error) {
 					Title:       "Directory",
 					Type:        "text",
 					Default:     "",
-					Required:    false,
-					Description: "Path to clone the repository to. If not provided, the repository will be cloned to the runner workspace directory",
+					Required:    true,
+					Description: "Path to clone the repository to. The path prefix is the workspace directory: " + request.Workspace,
 					Category:    "Repository",
 				},
 				{
@@ -245,8 +245,8 @@ func (s *PluginRPCServer) EndpointRequest(request plugins.EndpointRequest, resp 
 	return err
 }
 
-func (s *PluginRPCServer) Info(args interface{}, resp *models.Plugin) error {
-	result, err := s.Impl.Info()
+func (s *PluginRPCServer) Info(request plugins.InfoRequest, resp *models.Plugin) error {
+	result, err := s.Impl.Info(request)
 	*resp = result
 	return err
 }
