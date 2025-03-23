@@ -310,7 +310,7 @@ func (p *Plugin) Info(request plugins.InfoRequest) (models.Plugin, error) {
 					Key:         "branch",
 					Title:       "Branch",
 					Type:        "text",
-					Default:     "master",
+					Default:     "main",
 					Required:    true,
 					Description: "Branch to clone",
 					Category:    "Repository",
