@@ -35,8 +35,6 @@ github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 h1:+zs/tPmkDkHx3U66D
 github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376/go.mod h1:an3vInlBmSxCcxctByoQdvwPiA7DTK7jaaFDBTtu0ic=
 github.com/go-git/go-billy/v5 v5.6.2 h1:6Q86EsPXMa7c3YZ3aLAQsMA0VlWmy43r6FHqa/UNbRM=
 github.com/go-git/go-billy/v5 v5.6.2/go.mod h1:rcFC2rAsp/erv7CMz9GczHcuD0D32fWzH+MJAU+jaUU=
-github.com/go-git/go-git v4.7.0+incompatible h1:+W9rgGY4DOKKdX2x6HxSR7HNeTxqiKrOvKnuittYVdA=
-github.com/go-git/go-git v4.7.0+incompatible/go.mod h1:6+421e08gnZWn30y26Vchf7efgYLe4dl5OQbBSUXShE=
 github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399 h1:eMje31YglSBqCdIqdhKBW8lokaMrL3uTkpGYlE2OOT4=
 github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399/go.mod h1:1OCfN199q1Jm3HZlxleg+Dw/mwps2Wbk9frAWm+4FII=
 github.com/go-git/go-git/v5 v5.14.0 h1:/MD3lCrGjCen5WfEAzKg00MJJffKhC8gzS80ycmCi60=
@@ -138,8 +136,8 @@ github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445
 github.com/v1Flows/alertFlow/services/backend v0.0.0-20250317112742-7a11f04dd445/go.mod h1:wN72OUmADQ95eNYyiYM4oa6FOnvoCBRljzsGQGdvaIA=
 github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540 h1:Fu/mOZKwyRpm8QP5FfgAnDfv1XjgEJAKjHNzTVlIxW0=
 github.com/v1Flows/exFlow/services/backend v0.0.0-20250314134041-010ef4dcb540/go.mod h1:63Ad53i4eEkN3C6QeTsOWvLASjn43+cEwrWAcllX8So=
-github.com/v1Flows/runner v1.0.0-beta1.0.20250322100042-ef42b58c5320 h1:vt1iCetpIad9iCiprZpWgZ1LSzT+6IJuDAUMGunXLmY=
-github.com/v1Flows/runner v1.0.0-beta1.0.20250322100042-ef42b58c5320/go.mod h1:S7iJKU+JKZdGg+N4ayM+d9eZFI7h66Xr3o0CiWDf4eI=
+github.com/v1Flows/runner v1.0.1 h1:5kd7ECATo2sx89RmkQWgp6957lj0M5sx2WB3FB7jUyc=
+github.com/v1Flows/runner v1.0.1/go.mod h1:S7iJKU+JKZdGg+N4ayM+d9eZFI7h66Xr3o0CiWDf4eI=
 github.com/v1Flows/shared-library v1.0.7 h1:gTKCR2KTfHb2sKAIn1UclKQbu86iP+ATjvmuWvmHu9E=
 github.com/v1Flows/shared-library v1.0.7/go.mod h1:UVP6m6Nri6JC3L0xS3wkbqGvfQJ5fsYIJx81Gfj1TFw=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
