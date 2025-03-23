@@ -50,8 +50,10 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		Messages: []models.Message{
 			{
 				Title: "Git",
-				Lines: []string{
-					"Git clone " + url + " to " + directory,
+				Lines: []models.Line{
+					{
+						Content: "Cloning repository " + url + " to " + directory,
+					},
 				},
 			},
 		},
@@ -79,9 +81,15 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 				Messages: []models.Message{
 					{
 						Title: "Git",
-						Lines: []string{
-							"Error cloning repository",
-							err.Error(),
+						Lines: []models.Line{
+							{
+								Content: "Error cloning repository",
+								Color:   "danger",
+							},
+							{
+								Content: err.Error(),
+								Color:   "danger",
+							},
 						},
 					},
 				},
@@ -112,9 +120,15 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 				Messages: []models.Message{
 					{
 						Title: "Git",
-						Lines: []string{
-							"Error cloning repository",
-							err.Error(),
+						Lines: []models.Line{
+							{
+								Content: "Error cloning repository",
+								Color:   "danger",
+							},
+							{
+								Content: err.Error(),
+								Color:   "danger",
+							},
 						},
 					},
 				},
@@ -137,8 +151,11 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		Messages: []models.Message{
 			{
 				Title: "Git",
-				Lines: []string{
-					"Repository cloned successfully",
+				Lines: []models.Line{
+					{
+						Content: "Repository cloned successfully",
+						Color:   "success",
+					},
 				},
 			},
 		},
