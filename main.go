@@ -13,6 +13,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/hashicorp/go-plugin"
 )
 
@@ -27,6 +28,8 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 	username := ""
 	password := ""
 	token := ""
+	privateKey := ""
+	privateKeyPassphrase := ""
 
 	// access action params
 	for _, param := range request.Step.Action.Params {
@@ -50,6 +53,12 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		}
 		if param.Key == "token" {
 			token = param.Value
+		}
+		if param.Key == "private_key" {
+			privateKey = param.Value
+		}
+		if param.Key == "private_key_passphrase" {
+			privateKeyPassphrase = param.Value
 		}
 	}
 
@@ -75,14 +84,27 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		}, err
 	}
 
-	if token != "" {
+	if privateKey != "" {
+		// clone the repository with basic auth (username and password or token)
 		_, err = git.PlainClone(directory, false, &git.CloneOptions{
 			Auth: &http.BasicAuth{
-				Username: "abc123",
-				Password: token,
+				Username: func() string {
+					if token != "" {
+						return "abc123"
+					}
+					return username
+				}(),
+				Password: func() string {
+					if token != "" {
+						return token
+					}
+					return password
+				}(),
 			},
-			URL:      url,
-			Progress: os.Stdout,
+			URL:           url,
+			Progress:      os.Stdout,
+			RemoteName:    remoteName,
+			ReferenceName: plumbing.ReferenceName(branch),
 		})
 		if err != nil {
 			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
@@ -115,15 +137,78 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 			}, err
 		}
 	} else {
+		// clone the repository with ssh key
+
+		// check if private key file exists
+		if _, err := os.Stat(privateKey); os.IsNotExist(err) {
+			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
+				ID: request.Step.ID,
+				Messages: []models.Message{
+					{
+						Title: "Git",
+						Lines: []models.Line{
+							{
+								Content: "Error cloning repository",
+								Color:   "danger",
+							},
+							{
+								Content: "Private key file does not exist",
+								Color:   "danger",
+							},
+						},
+					},
+				},
+				Status:     "error",
+				FinishedAt: time.Now(),
+			}, request.Platform)
+			if err != nil {
+				return plugins.Response{
+					Success: false,
+				}, err
+			}
+			return plugins.Response{
+				Success: false,
+			}, errors.New("private key file does not exist")
+		}
+
+		publicKeys, err := ssh.NewPublicKeysFromFile("git", privateKey, privateKeyPassphrase)
+		if err != nil {
+			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
+				ID: request.Step.ID,
+				Messages: []models.Message{
+					{
+						Title: "Git",
+						Lines: []models.Line{
+							{
+								Content: "Error cloning repository",
+								Color:   "danger",
+							},
+							{
+								Content: err.Error(),
+								Color:   "danger",
+							},
+						},
+					},
+				},
+				Status:     "error",
+				FinishedAt: time.Now(),
+			}, request.Platform)
+			if err != nil {
+				return plugins.Response{
+					Success: false,
+				}, err
+			}
+			return plugins.Response{
+				Success: false,
+			}, err
+		}
+
 		_, err = git.PlainClone(directory, false, &git.CloneOptions{
-			Auth: &http.BasicAuth{
-				Username: username,
-				Password: password,
-			},
+			Auth:          publicKeys,
 			URL:           url,
+			Progress:      os.Stdout,
 			RemoteName:    remoteName,
 			ReferenceName: plumbing.ReferenceName(branch),
-			Progress:      os.Stdout,
 		})
 		if err != nil {
 			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
@@ -264,6 +349,24 @@ func (p *Plugin) Info(request plugins.InfoRequest) (models.Plugin, error) {
 					Default:     "",
 					Required:    false,
 					Description: "Token for authentication. If provided, username and password will be ignored",
+					Category:    "Authentication",
+				},
+				{
+					Key:         "private_key",
+					Title:       "Private Key",
+					Type:        "text",
+					Default:     "",
+					Required:    false,
+					Description: "Private key for authentication",
+					Category:    "Authentication",
+				},
+				{
+					Key:         "private_key_passphrase",
+					Title:       "Private Key Passphrase",
+					Type:        "password",
+					Default:     "",
+					Required:    false,
+					Description: "Passphrase for the private key",
 					Category:    "Authentication",
 				},
 			},
