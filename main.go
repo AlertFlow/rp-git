@@ -11,6 +11,7 @@ import (
 	"github.com/v1Flows/shared-library/pkg/models"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/hashicorp/go-plugin"
 )
@@ -20,6 +21,8 @@ type Plugin struct{}
 
 func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Response, error) {
 	url := ""
+	remoteName := ""
+	branch := ""
 	directory := ""
 	username := ""
 	password := ""
@@ -29,6 +32,12 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 	for _, param := range request.Step.Action.Params {
 		if param.Key == "url" {
 			url = param.Value
+		}
+		if param.Key == "remote_name" {
+			remoteName = param.Value
+		}
+		if param.Key == "branch" {
+			branch = param.Value
 		}
 		if param.Key == "directory" {
 			directory = request.Workspace + "/" + param.Value
@@ -111,8 +120,10 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 				Username: username,
 				Password: password,
 			},
-			URL:      url,
-			Progress: os.Stdout,
+			URL:           url,
+			RemoteName:    remoteName,
+			ReferenceName: plumbing.ReferenceName(branch),
+			Progress:      os.Stdout,
 		})
 		if err != nil {
 			err := executions.UpdateStep(request.Config, request.Execution.ID.String(), models.ExecutionSteps{
@@ -199,6 +210,24 @@ func (p *Plugin) Info(request plugins.InfoRequest) (models.Plugin, error) {
 					Default:     "",
 					Required:    true,
 					Description: "URL of the repository to clone",
+					Category:    "Repository",
+				},
+				{
+					Key:         "remote_name",
+					Title:       "Remote Name",
+					Type:        "text",
+					Default:     "origin",
+					Required:    true,
+					Description: "Name of the remote to clone",
+					Category:    "Repository",
+				},
+				{
+					Key:         "branch",
+					Title:       "Branch",
+					Type:        "text",
+					Default:     "master",
+					Required:    true,
+					Description: "Branch to clone",
 					Category:    "Repository",
 				},
 				{
