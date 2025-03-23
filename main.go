@@ -84,7 +84,7 @@ func (p *Plugin) ExecuteTask(request plugins.ExecuteTaskRequest) (plugins.Respon
 		}, err
 	}
 
-	if privateKey != "" {
+	if privateKey == "" {
 		// clone the repository with basic auth (username and password or token)
 		_, err = git.PlainClone(directory, false, &git.CloneOptions{
 			Auth: &http.BasicAuth{
